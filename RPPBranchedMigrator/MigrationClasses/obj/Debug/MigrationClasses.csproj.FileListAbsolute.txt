@@ -1,0 +1,5 @@
+C:\Projects\RPPBranchedMigrator\RPPBranchedMigrator\MigrationClasses\obj\Debug\ResolveAssemblyReference.cache
+C:\Projects\RPPBranchedMigrator\RPPBranchedMigrator\MigrationClasses\bin\Debug\MigrationClasses.dll
+C:\Projects\RPPBranchedMigrator\RPPBranchedMigrator\MigrationClasses\bin\Debug\MigrationClasses.pdb
+C:\Projects\RPPBranchedMigrator\RPPBranchedMigrator\MigrationClasses\obj\Debug\MigrationClasses.dll
+C:\Projects\RPPBranchedMigrator\RPPBranchedMigrator\MigrationClasses\obj\Debug\MigrationClasses.pdb

@@ -7,5 +7,6 @@ namespace MigrationClasses
 {
     public class Class1
     {
+        //edit
     }
 }

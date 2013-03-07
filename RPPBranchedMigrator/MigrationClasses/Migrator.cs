@@ -1,4 +1,7 @@
-﻿using System;
+﻿
+#region Using Directives
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,13 +10,17 @@ using System.Text.RegularExpressions;
 using System.Data;
 using System.IO;
 
+#endregion
+
 namespace MigrationClasses
 {
     public enum MigrationDirectionEnum { Up, Down }
 
     public static class MigrationManager
     {
-        struct ConnOutcomeSQLServer
+        #region Enums and Structs
+
+        class ConnOutcomeSQLServer
         {
             public bool Suceeded;
             public SqlConnection Connection;
@@ -27,6 +34,10 @@ namespace MigrationClasses
             }
         }
 
+        #endregion
+
+        #region Properties
+
         public static string ConnectionString { get; set; }
 
         public static String MigrationsFolderPath { get; set; }
@@ -38,11 +49,9 @@ namespace MigrationClasses
             get { return MigrationDirectionEnum.Up; } //TODO: Make dynamic
         }
 
-        static IEnumerable<string> Migrations()
-        {
-            foreach (string filePath in Directory.GetFiles(
-                string.Format("{0}\\{1}", MigrationsFolderPath, MigrationDirection.ToString()))) { yield return filePath; }
-        }
+        #endregion
+
+        #region SQL Server -specific functionality
 
         static ConnOutcomeSQLServer getConnSQLServer(bool open = true)
         {
@@ -62,6 +71,10 @@ namespace MigrationClasses
 
             return connOutcome;
         }
+
+        #endregion
+
+        #region SQL script management
 
         static string textBlocksRegex = @"'(''|[^'])*'";
         static string tabsAndLineBreaksRegex = @"[\t\r\n]";
@@ -106,12 +119,73 @@ namespace MigrationClasses
             return _Regx.Split(sql.ToString().Trim());
         }
 
+        #endregion
+
+        #region BranchedMigrator -specific database objects
+
+        static string DbOjectsCreateScriptPath = @"";
+
+        static void CheckCreateBranchedMigratordbObjects(
+        ConnOutcomeSQLServer connState = null, SqlTransaction tran = null, bool concludeTranWithinThisMethod = false)
+        {
+            if (connState.Equals(null))
+            {
+                connState = getConnSQLServer();
+                if (connState.Connection.State == ConnectionState.Closed) connState.Connection.Open();
+                tran = connState.Connection.BeginTransaction();
+                concludeTranWithinThisMethod = true;
+            }
+
+            using (SqlCommand cmd = connState.Connection.CreateCommand())
+            {
+                cmd.Connection = connState.Connection;
+                cmd.Transaction = tran;
+
+                using (FileStream _FileStrm = File.OpenRead(DbOjectsCreateScriptPath))
+                {
+                    StreamReader reader = new StreamReader(_FileStrm);
+
+                    foreach (string currentSqlCommand in CleanSQL(reader))
+                    {
+                        if (currentSqlCommand.Length > 0)
+                        {
+                            cmd.CommandText = currentSqlCommand;
+
+                            try
+                            {
+                                cmd.ExecuteNonQuery();
+                            }
+                            catch (SqlException ex)
+                            {
+                                tran.Rollback();
+                                throw ex;
+                            }
+                        }
+                    }
+                }
+
+                if (concludeTranWithinThisMethod == true) tran.Commit();
+            }
+        }
+
+        #endregion
+
+        #region Migration Methods
+
+        static IEnumerable<string> Migrations()
+        {
+            foreach (string filePath in Directory.GetFiles(
+                string.Format("{0}\\{1}", MigrationsFolderPath, MigrationDirection.ToString()))) { yield return filePath; }
+        }
+
         public static void Migrate()
         {
             ConnOutcomeSQLServer connState = getConnSQLServer();
             if (connState.Connection.State == ConnectionState.Closed) connState.Connection.Open();
 
             SqlTransaction tran = connState.Connection.BeginTransaction();
+
+            CheckCreateBranchedMigratordbObjects(connState, tran);
 
             foreach (string sqlFilePath in Migrations())
             {
@@ -146,5 +220,7 @@ namespace MigrationClasses
             }
             tran.Commit();
         }
+
+        #endregion
     }
 }

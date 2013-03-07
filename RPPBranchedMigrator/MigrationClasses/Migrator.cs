@@ -9,9 +9,11 @@ using System.IO;
 
 namespace MigrationClasses
 {
+    public enum MigrationDirectionEnum { Up, Down }
+
     public static class MigrationManager
     {
-        private struct ConnOutcomeSQLServer
+        struct ConnOutcomeSQLServer
         {
             public bool Suceeded;
             public SqlConnection Connection;
@@ -31,16 +33,18 @@ namespace MigrationClasses
 
         public static DateTime? MigrateToDateTime { get; set; }
 
-        public static IEnumerable<string> Migrations()
+        public static MigrationDirectionEnum MigrationDirection
         {
-            string[] dummyFileList = { "", "", "" };
-
-            foreach (string filePath in dummyFileList) { yield return filePath; }
-
-            //Directory.GetFiles(MigrationsFolderPath);
+            get { return MigrationDirectionEnum.Up; } //TODO: Make dynamic
         }
 
-        private static ConnOutcomeSQLServer getConnSQLServer(bool open = true)
+        static IEnumerable<string> Migrations()
+        {
+            foreach (string filePath in Directory.GetFiles(
+                string.Format("{0}\\{1}", MigrationsFolderPath, MigrationDirection.ToString()))) { yield return filePath; }
+        }
+
+        static ConnOutcomeSQLServer getConnSQLServer(bool open = true)
         {
             ConnOutcomeSQLServer connOutcome = new ConnOutcomeSQLServer(false);
 
@@ -59,6 +63,43 @@ namespace MigrationClasses
             return connOutcome;
         }
 
+        public static StringBuilder CleanSQL(StreamReader reader)
+        {
+            string commandText = reader.ReadToEnd();
+
+            RegexOptions regExOptions = RegexOptions.IgnoreCase | RegexOptions.Multiline;
+
+            string rawText = commandText;
+
+            string regExText = "('(''|[^'])*')|[\\t\\r\\n]|(--[^\\r\\n]*)|(/\\*[\\w\\W]*?(?=\\*/)\\*/)";
+            //Replaces Carriage Returns, Tabs, Line Feeds, Single-Row and Multi-row Comments 
+            //with a space when not included inside a text block.
+            //string regExText = "(--[^\\r\\n]*)|(/\\*[\\w\\W]*?(?=\\*/)\\*/)";
+
+            MatchCollection patternMatchList = Regex.Matches(rawText, regExText, regExOptions);
+            for (int patternIndex = patternMatchList.Count - 1; patternIndex >= 0; patternIndex += -1)
+            {
+                var match = patternMatchList[patternIndex];
+                if (match.Value.StartsWith("-") || (!match.Value.StartsWith("'") && !match.Value.EndsWith("'")))
+                {
+                    rawText = rawText.Substring(0, match.Index) + " " + rawText.Substring(match.Index + match.Length);
+                }
+            }
+            //Remove extra spacing that is not contained inside text qualifers.
+            patternMatchList = Regex.Matches(rawText, "'([^']|'')*'|[ ]{2,}", regExOptions);
+            for (int patternIndex = patternMatchList.Count - 1; patternIndex >= 0; patternIndex += -1)
+            {
+                var match2 = patternMatchList[patternIndex];
+                //if (!match2.Value.StartsWith("'") && !match2.Value.EndsWith("'"))
+                if (match2.Value.StartsWith("-") || (!match2.Value.StartsWith("'") && !match2.Value.EndsWith("'")))
+                {
+                    rawText = rawText.Substring(0, match2.Index) + rawText.Substring(match2.Index + match2.Length - 1);
+                }
+            }
+            //Return value without leading and trailing spaces.
+            return new StringBuilder(rawText.Trim());
+        }
+
         public static void Migrate()
         {
             ConnOutcomeSQLServer connState = getConnSQLServer();
@@ -71,7 +112,6 @@ namespace MigrationClasses
 
             foreach (string sqlFilePath in Migrations())
             {
-
                 using (SqlCommand _Cmd = connState.Connection.CreateCommand())
                 {
                     _Cmd.Connection = connState.Connection;
@@ -80,6 +120,9 @@ namespace MigrationClasses
                     using (FileStream _FileStrm = File.OpenRead(sqlFilePath))
                     {
                         StreamReader reader = new StreamReader(_FileStrm);
+
+                        StringBuilder cleanSql = CleanSQL(reader);
+
                         while (!reader.EndOfStream)
                         {
                             currentSqlCommand = new StringBuilder(reader.ReadLine());
@@ -93,10 +136,10 @@ namespace MigrationClasses
                                 {
                                     _Cmd.ExecuteNonQuery();
                                 }
-                                catch (SqlException generatedExceptionName)
+                                catch (SqlException ex)
                                 {
                                     _Tran.Rollback();
-                                    throw;
+                                    throw ex;
                                 }
                             }
 
@@ -109,7 +152,7 @@ namespace MigrationClasses
         }
     }
 
-#region retiredCode
+    #region retiredCode
 
 
 
@@ -214,6 +257,6 @@ namespace MigrationClasses
     //    }    
     //}
 
-#endregion
+    #endregion
 
 }

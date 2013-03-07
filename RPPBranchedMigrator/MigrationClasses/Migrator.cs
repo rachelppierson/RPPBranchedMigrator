@@ -97,7 +97,7 @@ namespace MigrationClasses
                 }
             }
             //Return value without leading and trailing spaces.
-            return new StringBuilder(rawText.Trim());
+            return new StringBuilder(rawText.Replace(" GO ", "\r\nGO\r\n").Replace(" GO", "\r\nGO\r\n").Trim());
         }
 
         public static void Migrate()

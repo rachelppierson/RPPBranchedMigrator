@@ -63,7 +63,7 @@ namespace MigrationClasses
             return connOutcome;
         }
 
-        public static StringBuilder CleanSQL(StreamReader reader)
+        public static string[] CleanSQL(StreamReader reader)
         {
             string commandText = reader.ReadToEnd();
 
@@ -97,8 +97,59 @@ namespace MigrationClasses
                 }
             }
             //Return value without leading and trailing spaces.
-            return new StringBuilder(rawText.Replace(" GO ", "\r\nGO\r\n").Replace(" GO", "\r\nGO\r\n").Trim());
+            //return new StringBuilder(rawText.Replace(" GO ", "\r\nGO\r\n").Replace(" GO", "\r\nGO\r\n").Trim());
+            //return new StringBuilder(rawText.Replace("GO", "\r\n").Trim());
+            //rawText.Replace("GO", "\r\n").Trim();
+            rawText = rawText.Replace(" GO ", "\r\nGO\r\n").Replace(" GO", "\r\nGO\r\n").Trim();
+            //return rawText.Split(crlf);
+            Regex _Regx = new Regex("^GO", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+            return _Regx.Split(rawText);
         }
+
+        //public static StringBuilder CleanSQL(StreamReader reader)
+        //{
+        //    //StringBuilder uneditedSQL = new StringBuilder(reader.ReadToEnd());
+
+        //    StringBuilder sql = new StringBuilder(reader.ReadToEnd());
+
+        //    RegexOptions regExOptions = RegexOptions.IgnoreCase | RegexOptions.Multiline;
+
+        //    //string rawText = uneditedSQL;
+
+        //    string regExText = "('(''|[^'])*')|[\\t\\r\\n]|(--[^\\r\\n]*)|(/\\*[\\w\\W]*?(?=\\*/)\\*/)";
+        //    //Replaces Carriage Returns, Tabs, Line Feeds, Single-Row and Multi-row Comments 
+        //    //with a space when not included inside a text block.
+
+        //    MatchCollection patternMatchList = Regex.Matches(sql.ToString(), regExText, regExOptions);
+        //    for (int patternIndex = patternMatchList.Count - 1; patternIndex >= 0; patternIndex += -1)
+        //    {
+        //        var match = patternMatchList[patternIndex];
+        //        if (match.Value.StartsWith("-") || (!match.Value.StartsWith("'") && !match.Value.EndsWith("'")))
+        //            sql.Replace(match.Value, " ", match.Index, 1);
+        //        //{
+        //        //    sql.Remove(match.Index, match.Length);
+
+        //        //    //sql = sql.Substring(0, match.Index) + " " + sql.Substring(match.Index + match.Length);
+        //        //}
+        //    }
+        //    //Remove extra spacing that is not contained inside text qualifers.
+        //    patternMatchList = Regex.Matches(sql.ToString(), "'([^']|'')*'|[ ]{2,}", regExOptions);
+        //    for (int patternIndex = patternMatchList.Count - 1; patternIndex >= 0; patternIndex += -1)
+        //    {
+        //        var match2 = patternMatchList[patternIndex];
+        //        //if (!match2.Value.StartsWith("'") && !match2.Value.EndsWith("'"))
+        //        if (match2.Value.StartsWith("-") || (!match2.Value.StartsWith("'") && !match2.Value.EndsWith("'")))
+        //            sql.Replace(match2.Value, " ", match2.Index, 1);
+        //        //{
+        //        //    //sql = sql.Substring(0, match2.Index) + sql.Substring(match2.Index + match2.Length - 1);
+        //        //}
+        //    }
+        //    //Return value without leading and trailing spaces.
+        //    //return new StringBuilder(sql.Replace(" GO ", "\r\nGO\r\n").Replace(" GO", "\r\nGO\r\n").Trim());
+        //    sql.Replace(" GO ", "\r\nGO\r\n").Replace(" GO", "\r\nGO\r\n");
+
+        //    return sql;
+        //}
 
         public static void Migrate()
         {
@@ -108,47 +159,51 @@ namespace MigrationClasses
 
             StringBuilder currentSqlCommand;
 
-            SqlTransaction _Tran = connState.Connection.BeginTransaction();
+            SqlTransaction tran = connState.Connection.BeginTransaction();
 
             foreach (string sqlFilePath in Migrations())
             {
-                using (SqlCommand _Cmd = connState.Connection.CreateCommand())
+                using (SqlCommand cmd = connState.Connection.CreateCommand())
                 {
-                    _Cmd.Connection = connState.Connection;
-                    _Cmd.Transaction = _Tran;
+                    cmd.Connection = connState.Connection;
+                    cmd.Transaction = tran;
 
                     using (FileStream _FileStrm = File.OpenRead(sqlFilePath))
                     {
                         StreamReader reader = new StreamReader(_FileStrm);
 
-                        StringBuilder cleanSql = CleanSQL(reader);
+                        //currentSqlCommand = CleanSQL(reader);
+                        //currentSqlCommand = new StringBuilder(reader.ReadToEnd());
 
-                        while (!reader.EndOfStream)
+                        string[] foo = CleanSQL(reader);
+
+                        foreach (string sql in CleanSQL(reader))
                         {
-                            currentSqlCommand = new StringBuilder(reader.ReadLine());
+                            currentSqlCommand = new StringBuilder(sql);
+                        //while (!reader.EndOfStream)
+                        //{
+                        //    currentSqlCommand = new StringBuilder(reader.ReadLine());
 
                             if (currentSqlCommand.Length > 0)
                             {
-                                _Cmd.CommandText = currentSqlCommand.ToString();
-                                _Cmd.CommandType = CommandType.Text;
+                                cmd.CommandText = currentSqlCommand.ToString();
+                                cmd.CommandType = CommandType.Text;
 
                                 try
                                 {
-                                    _Cmd.ExecuteNonQuery();
+                                    cmd.ExecuteNonQuery();
                                 }
                                 catch (SqlException ex)
                                 {
-                                    _Tran.Rollback();
+                                    tran.Rollback();
                                     throw ex;
                                 }
                             }
-
                         }
                     }
                 }
-
-                _Tran.Commit();
             }
+            tran.Commit();
         }
     }
 

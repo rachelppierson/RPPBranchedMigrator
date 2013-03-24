@@ -9,6 +9,7 @@ using System.Data.SqlClient;
 using System.Text.RegularExpressions;
 using System.Data;
 using System.IO;
+using System.Reflection;
 
 #endregion
 
@@ -18,6 +19,16 @@ namespace MigrationClasses
 
     public static class MigrationManager
     {
+        #region Constructors 
+
+        static MigrationManager()
+        {
+            //TODO - get a real path
+            DbOjectsCreateScriptPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        }
+
+        #endregion 
+
         #region Enums and Structs
 
         class ConnOutcomeSQLServer

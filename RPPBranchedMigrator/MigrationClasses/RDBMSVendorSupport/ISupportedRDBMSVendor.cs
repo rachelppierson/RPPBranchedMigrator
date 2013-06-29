@@ -24,6 +24,9 @@ namespace MigrationClasses.RDBMSVendorSupport
 
         /// <summary>Attempts to commit a Transaction within the context of the RDBMS targeted and ConnectionString set</summary>
         void RollbackTransaction();
+
+        /// <summary>Attempts to close any open Connection within the context of the RDBMS targeted and ConnectionString set</summary>
+        void CloseConnection();
  
         /// <summary>Attempts to run SQL commands contained in a .SQL file</summary>
         /// <param name="sqlFilePath">Fully-qualified path to a file containing valid SQL</param>

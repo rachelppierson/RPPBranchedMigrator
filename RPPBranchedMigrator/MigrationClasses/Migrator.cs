@@ -64,7 +64,7 @@ namespace MigrationClasses
             try
             {
                 rdbmsVendor.BeginTransaction();
-                foreach (string sqlFilePath in Migrations()) { rdbmsVendor.RunCommandsInSQLFile(sqlFilePath); }
+                foreach (string sqlFilePath in Migrations()) { rdbmsVendor.RunCommandsInSQLFile(new StringBuilder(sqlFilePath)); }
                 rdbmsVendor.CommitTransaction();
             }
             catch (Exception e)

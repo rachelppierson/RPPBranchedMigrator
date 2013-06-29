@@ -30,6 +30,20 @@ namespace MigrationClasses.RDBMSVendorSupport
  
         /// <summary>Attempts to run SQL commands contained in a .SQL file</summary>
         /// <param name="sqlFilePath">Fully-qualified path to a file containing valid SQL</param>
-        void RunCommandsInSQLFile(string sqlFilePath);
+        void RunCommandsInSQLFile(StringBuilder sqlFilePath);
+
+        /// <summary>
+        /// Attempts to create a table called 'VersionInfo' in a Schema called 'migrator', or the nearest
+        /// equivalent thereof for the RDBMS in question. This table will contain information about which 
+        /// discrete SQL files have been applied to the database, and when they were applied.
+        /// </summary>
+        void CreateMigrationsDbObjectsIfAppropriate();
+
+        /// <summary>
+        /// Returns a DateTime indicating the most recent SQL script that was applied. 
+        /// When migrating UP, this will determine the cut-off point for deciding which UP scripts have already
+        /// been applied. When migrating DOWN, this will determine which DOWN script to start from.
+        /// </summary>
+        DateTime? GetMostRecentMigration();
     }
 }

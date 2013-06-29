@@ -27,9 +27,10 @@ namespace MigrationClasses.RDBMSVendorSupport.VendorSpecificImplementations
 
         #region ISupportedRDBMSVendor implementation
 
-        public string ConnectionString {
+        public string ConnectionString
+        {
             get { return connection.ConnectionString; }
-            set { connection = new SqlConnection(value); } 
+            set { connection = new SqlConnection(value); }
         }
 
         public void BeginTransaction()
@@ -46,7 +47,11 @@ namespace MigrationClasses.RDBMSVendorSupport.VendorSpecificImplementations
 
         public void RollbackTransaction()
         {
-            if (transaction is SqlTransaction) transaction.Rollback();
+            if (transaction is SqlTransaction)
+            {
+                transaction.Rollback();
+                transaction = null;
+            }
         }
 
         public void CloseConnection()
@@ -54,39 +59,56 @@ namespace MigrationClasses.RDBMSVendorSupport.VendorSpecificImplementations
             if (connection is SqlConnection) connection.Close();
         }
 
-        public void RunCommandsInSQLFile(string sqlFilePath)
+        public void RunCommandsInSQLFile(StringBuilder sqlFilePath)
         {
-            using (SqlCommand cmd = connection.CreateCommand())
+            CreateMigrationsDbObjectsIfAppropriate();
+
+            using (FileStream _FileStrm = File.OpenRead(sqlFilePath.ToString()))
             {
-                //cmd.Connection = connection;
-                cmd.Transaction = transaction;
+                StreamReader reader = new StreamReader(_FileStrm);
 
-                using (FileStream _FileStrm = File.OpenRead(sqlFilePath))
+                foreach (string currentSqlCommand in CleanSQL(reader))
                 {
-                    StreamReader reader = new StreamReader(_FileStrm);
-
-                    foreach (string currentSqlCommand in CleanSQL(reader))
-                    {
-                        if (currentSqlCommand.Length > 0)
-                        {
-                            cmd.CommandText = currentSqlCommand;
-                            try
-                            {
-                                cmd.ExecuteNonQuery();
-                            }
-                            catch (SqlException e)
-                            {
-                                //Let the consumer know exactly where the error occurred, and pass on any 
-                                //specific SqlException details via InnerException.
-                                throw new Exception(
-                                    string.Format(
-                                        "A SQL Exception occurred whilst trying to run the command '{0}' in the file '{1}'.",
-                                    cmd.CommandText, Path.GetFileName(sqlFilePath)), e.InnerException);
-                            }
-                        }
-                    }
+                    if (currentSqlCommand.Length > 0) runSQLcommand(new StringBuilder(currentSqlCommand), sqlFilePath);
                 }
             }
+        }
+
+        public void CreateMigrationsDbObjectsIfAppropriate()
+        {
+            //HACK: Can put this SQL in Resource files later, if desired. If they get too unmanageable, I will.
+
+                StringBuilder schemaSql =
+                    new StringBuilder(
+@"IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = N'migrator') 
+BEGIN
+	EXEC('CREATE SCHEMA [migrator] AUTHORIZATION [dbo]');
+END");
+
+                StringBuilder migTableSql =
+                    new StringBuilder(
+@"IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[migrator].[VersionInfo]') AND type in (N'U'))
+CREATE TABLE [migrator].[VersionInfo](
+	[MigrationFilename] [nvarchar](100) NOT NULL,
+	[DateTimeApplied] [datetime] NOT NULL,
+	[Direction] [char](1) NOT NULL,
+    CONSTRAINT [PK_VersionInfo] PRIMARY KEY CLUSTERED ([MigrationFilename] ASC) 
+    WITH (
+        PAD_INDEX  = OFF, 
+        STATISTICS_NORECOMPUTE  = OFF, 
+        IGNORE_DUP_KEY = OFF, 
+        ALLOW_ROW_LOCKS  = ON, 
+        ALLOW_PAGE_LOCKS  = ON) 
+    ON [PRIMARY]) 
+ON [PRIMARY];");
+
+                runSQLcommand(schemaSql);
+                runSQLcommand(migTableSql);
+        }
+
+        public DateTime? GetMostRecentMigration()
+        {
+            return null;
         }
 
         #endregion
@@ -136,6 +158,42 @@ namespace MigrationClasses.RDBMSVendorSupport.VendorSpecificImplementations
 
             Regex _Regx = new Regex("^GO", RegexOptions.IgnoreCase | RegexOptions.Multiline);
             return _Regx.Split(sql.ToString().Trim());
+        }
+
+        #endregion
+
+        #region SQL Command Execution
+
+        /// <summary>
+        /// Runs a SQL command within the Transaction referenced by the Private 'transaction' field. Throws
+        /// an appropriate Exception if any necessary prerequisite isn't met (e.g., if no ConnectionString has
+        /// been set or a Transaction hasn't been begun).
+        /// </summary>
+        /// <param name="sql">StringBuilder containing the SQL to be executed</param>
+        /// <param name="sqlFilePath">Path to the SQL file that contains the SQL, if appropriate.</param>
+        void runSQLcommand(StringBuilder sql, StringBuilder sqlFilePath = null)
+        {
+            using (SqlCommand cmd = connection.CreateCommand())
+            {
+                cmd.Transaction = transaction;
+
+                cmd.CommandText = sql.ToString();
+                try
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                catch (SqlException e)
+                {
+                    //Let the consumer know exactly where the error occurred, and pass on any 
+                    //specific SqlException details via InnerException.
+                    throw new Exception(
+                        string.Format(
+                            "A SQL Exception occurred whilst trying to run the command '{0}'",
+                        cmd.CommandText,
+                        sqlFilePath == null ? "." : string.Format(" in the file '{0}'.", Path.GetFileName(sqlFilePath.ToString()))),
+                        e.InnerException);
+                }
+            }
         }
 
         #endregion

@@ -10,6 +10,8 @@ using System.Text.RegularExpressions;
 using System.Data;
 using System.IO;
 using System.Reflection;
+using MigrationClasses.RDBMSVendorSupport;
+using MigrationClasses.RDBMSVendorSupport.VendorSpecificImplementations;
 
 #endregion
 
@@ -19,27 +21,25 @@ namespace MigrationClasses
 
     public static class MigrationManager
     {
-        #region Constructors 
+        #region Constructors
 
         static MigrationManager()
         {
-            //TODO - get a real path
-            DbOjectsCreateScriptPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         }
 
-        #endregion 
+        #endregion
 
-        #region Enums and Structs
+        #region Enums, Structs and Private Classes
 
         class ConnOutcomeSQLServer
         {
-            public bool Suceeded;
+            public bool Succeeded;
             public SqlConnection Connection;
             public Exception Exception;
 
             public ConnOutcomeSQLServer(bool suceeded, SqlConnection connection = null, Exception exception = null)
             {
-                Suceeded = suceeded;
+                Succeeded = suceeded;
                 Connection = connection;
                 Exception = exception;
             }
@@ -49,15 +49,27 @@ namespace MigrationClasses
 
         #region Properties
 
+        public static ISupportedRDBMSVendor rdbmsVendor = new SQLServer();
+
         public static string ConnectionString { get; set; }
 
         public static String MigrationsFolderPath { get; set; }
+
+        /// <summary>
+        /// Returns a fully-qualified folder path to the folder that contains SQL files
+        /// appropriate to the currently-indicated migration direction. i.e., the "Up" or "Down"
+        /// SQL migration files, as appropriate.
+        /// </summary>
+        static string fullyQualifiedMigrationFilesPath
+        {
+            get { return System.IO.Path.Combine(MigrationsFolderPath, MigrationDirection.ToString().ToUpper()); }
+        }
 
         public static DateTime? MigrateToDateTime { get; set; }
 
         public static MigrationDirectionEnum MigrationDirection
         {
-            get { return MigrationDirectionEnum.Up; } //TODO: Make dynamic
+            get { return MigrationDirectionEnum.Up; } //TODO: Make this able to be detected from the context
         }
 
         #endregion
@@ -72,7 +84,7 @@ namespace MigrationClasses
             {
                 SqlConnection conn = new SqlConnection(ConnectionString);
                 if (open) conn.Open();
-                connOutcome.Suceeded = true;
+                connOutcome.Succeeded = true;
                 connOutcome.Connection = conn;
             }
             catch (Exception ex)
@@ -86,6 +98,10 @@ namespace MigrationClasses
         #endregion
 
         #region SQL script management
+
+        #region -> SQL Cleaning
+
+        //HACK: I'm not completely happy with using Regex for this task, but it's the best option available for now
 
         static string textBlocksRegex = @"'(''|[^'])*'";
         static string tabsAndLineBreaksRegex = @"[\t\r\n]";
@@ -132,12 +148,12 @@ namespace MigrationClasses
 
         #endregion
 
+        #endregion
+
         #region BranchedMigrator -specific database objects
 
-        static string DbOjectsCreateScriptPath = @"";
-
-        static void CheckCreateBranchedMigratordbObjects(
-        ConnOutcomeSQLServer connState = null, SqlTransaction tran = null, bool concludeTranWithinThisMethod = false)
+        static void TryRunCommandsInSQLFile(
+        string sqlFilePath, ConnOutcomeSQLServer connState = null, SqlTransaction tran = null, bool concludeTranWithinThisMethod = false)
         {
             if (connState.Equals(null))
             {
@@ -152,7 +168,7 @@ namespace MigrationClasses
                 cmd.Connection = connState.Connection;
                 cmd.Transaction = tran;
 
-                using (FileStream _FileStrm = File.OpenRead(DbOjectsCreateScriptPath))
+                using (FileStream _FileStrm = File.OpenRead(sqlFilePath))
                 {
                     StreamReader reader = new StreamReader(_FileStrm);
 
@@ -185,8 +201,7 @@ namespace MigrationClasses
 
         static IEnumerable<string> Migrations()
         {
-            foreach (string filePath in Directory.GetFiles(
-                string.Format("{0}\\{1}", MigrationsFolderPath, MigrationDirection.ToString()))) { yield return filePath; }
+            foreach (string filePath in Directory.GetFiles(fullyQualifiedMigrationFilesPath)) { yield return filePath; }
         }
 
         public static void Migrate()
@@ -196,38 +211,14 @@ namespace MigrationClasses
 
             SqlTransaction tran = connState.Connection.BeginTransaction();
 
-            CheckCreateBranchedMigratordbObjects(connState, tran);
+            //CheckCreateBranchedMigratorDbObjects(connState, tran);
 
             foreach (string sqlFilePath in Migrations())
             {
-                using (SqlCommand cmd = connState.Connection.CreateCommand())
-                {
-                    cmd.Connection = connState.Connection;
-                    cmd.Transaction = tran;
-
-                    using (FileStream _FileStrm = File.OpenRead(sqlFilePath))
-                    {
-                        StreamReader reader = new StreamReader(_FileStrm);
-
-                        foreach (string currentSqlCommand in CleanSQL(reader))
-                        {
-                            if (currentSqlCommand.Length > 0)
-                            {
-                                cmd.CommandText = currentSqlCommand;
-
-                                try
-                                {
-                                    cmd.ExecuteNonQuery();
-                                }
-                                catch (SqlException ex)
-                                {
-                                    tran.Rollback();
-                                    throw ex;
-                                }
-                            }
-                        }
-                    }
-                }
+                /*TODO: Eventually, want to use the decorator pattern to allow an implementation
+                        of 'executeIndividualSQLCommandsInSQLFile' that is specific to each
+                        each supported RDBMS to be called here. */
+                TryRunCommandsInSQLFile(sqlFilePath, connState, tran);
             }
             tran.Commit();
         }

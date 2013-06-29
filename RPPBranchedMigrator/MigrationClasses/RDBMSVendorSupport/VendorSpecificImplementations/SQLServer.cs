@@ -59,7 +59,7 @@ namespace MigrationClasses.RDBMSVendorSupport.VendorSpecificImplementations
             if (connection is SqlConnection) connection.Close();
         }
 
-        public void RunCommandsInSQLFile(StringBuilder sqlFilePath)
+        public void RunCommandsInSQLFile(StringBuilder sqlFilePath, MigrationDirectionEnum direction = MigrationDirectionEnum.Up)
         {
             CreateMigrationsDbObjectsIfAppropriate();
 
@@ -72,21 +72,23 @@ namespace MigrationClasses.RDBMSVendorSupport.VendorSpecificImplementations
                     if (currentSqlCommand.Length > 0) runSQLcommand(new StringBuilder(currentSqlCommand), sqlFilePath);
                 }
             }
+
+            LogMigration(Path.GetFileName(sqlFilePath.ToString()), direction);
         }
 
         public void CreateMigrationsDbObjectsIfAppropriate()
         {
             //HACK: Can put this SQL in Resource files later, if desired. If they get too unmanageable, I will.
 
-                StringBuilder schemaSql =
-                    new StringBuilder(
+            StringBuilder schemaSql =
+                new StringBuilder(
 @"IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = N'migrator') 
 BEGIN
 	EXEC('CREATE SCHEMA [migrator] AUTHORIZATION [dbo]');
 END");
 
-                StringBuilder migTableSql =
-                    new StringBuilder(
+            StringBuilder migTableSql =
+                new StringBuilder(
 @"IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[migrator].[VersionInfo]') AND type in (N'U'))
 CREATE TABLE [migrator].[VersionInfo](
 	[MigrationFilename] [nvarchar](100) NOT NULL,
@@ -102,13 +104,36 @@ CREATE TABLE [migrator].[VersionInfo](
     ON [PRIMARY]) 
 ON [PRIMARY];");
 
-                runSQLcommand(schemaSql);
-                runSQLcommand(migTableSql);
+            runSQLcommand(schemaSql);
+            runSQLcommand(migTableSql);
         }
 
         public DateTime? GetMostRecentMigration()
         {
             return null;
+        }
+
+        public void LogMigration(string filename, MigrationDirectionEnum direction)
+        {
+            StringBuilder recordMigrationSQL =
+                new StringBuilder(string.Format(
+@"IF NOT EXISTS (SELECT * FROM migrator.VersionInfo WHERE MigrationFilename = N'{0}') 
+BEGIN
+    INSERT INTO migrator.VersionInfo (MigrationFilename, DateTimeApplied, Direction)
+    VALUES (N'{0}', CAST(N'{1}' AS DATETIME), N'{2}');
+END
+ELSE
+BEGIN
+    UPDATE migrator.VersionInfo
+    SET MigrationFilename = N'{0}', DateTimeApplied = CAST(N'{1}' AS DATETIME), Direction = N'{2}'
+    WHERE MigrationFilename = N'{0}'
+END
+",
+                    filename.ToString(),
+                    DateTime.Now.ToString("dd MMM yyyy hh:mm:ss"),
+                    direction.ToString().ToUpper()[0]));
+
+            runSQLcommand(recordMigrationSQL);
         }
 
         #endregion

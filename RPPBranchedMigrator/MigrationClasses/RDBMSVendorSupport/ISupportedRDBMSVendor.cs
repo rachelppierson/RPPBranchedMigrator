@@ -30,7 +30,7 @@ namespace MigrationClasses.RDBMSVendorSupport
  
         /// <summary>Attempts to run SQL commands contained in a .SQL file</summary>
         /// <param name="sqlFilePath">Fully-qualified path to a file containing valid SQL</param>
-        void RunCommandsInSQLFile(StringBuilder sqlFilePath);
+        void RunCommandsInSQLFile(StringBuilder sqlFilePath, MigrationDirectionEnum direction = MigrationDirectionEnum.Up);
 
         /// <summary>
         /// Attempts to create a table called 'VersionInfo' in a Schema called 'migrator', or the nearest
@@ -45,5 +45,8 @@ namespace MigrationClasses.RDBMSVendorSupport
         /// been applied. When migrating DOWN, this will determine which DOWN script to start from.
         /// </summary>
         DateTime? GetMostRecentMigration();
+
+        //Creates a record of a SQL files being migrated (Up or Down), along with the time the migration occurred.
+        void LogMigration(string filename, MigrationDirectionEnum direction);
     }
 }

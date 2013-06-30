@@ -40,9 +40,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommonAnonymousFunctions.cs" />
     <Compile Include="Migrator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RDBMSVendorSupport\ConnectionOutcome.cs" />
     <Compile Include="RDBMSVendorSupport\ISupportedRDBMSVendor.cs" />
     <Compile Include="RDBMSVendorSupport\VendorSpecificImplementations\SQLServer.cs" />
   </ItemGroup>

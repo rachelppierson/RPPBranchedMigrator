@@ -12,6 +12,8 @@ using System.IO;
 using System.Reflection;
 using MigrationClasses.RDBMSVendorSupport;
 using MigrationClasses.RDBMSVendorSupport.VendorSpecificImplementations;
+using System.Dynamic;
+using System.Globalization;
 
 #endregion
 
@@ -21,7 +23,17 @@ namespace MigrationClasses
 
     public static class MigrationManager
     {
+        #region Fields
+
+        public static DateTime? MigrateToDateTime = DateTime.Now;
+
+        #endregion
+
         #region Properties
+
+        public static bool ConnectionSucceeded { get { return rdbmsVendor.ConnectionSucceeded; } }
+
+        public static DateTime? MostRecentMigrationApplied { get { return rdbmsVendor.GetMostRecentMigration(); } }
 
         static ISupportedRDBMSVendor rdbmsVendor = new SQLServer(); //Default vendor is SQL Server
 
@@ -43,20 +55,51 @@ namespace MigrationClasses
             get { return Path.Combine(MigrationsFolderPath, MigrationDirection.ToString().ToUpper()); }
         }
 
-        public static DateTime? MigrateToDateTime { get; set; }
-
-        public static MigrationDirectionEnum MigrationDirection
-        {
-            get { return MigrationDirectionEnum.Up; } //TODO: Make this able to be detected from the context
-        }
+        public static MigrationDirectionEnum MigrationDirection { get; set; }
 
         #endregion
 
         #region Migration Methods
 
-        static IEnumerable<string> Migrations()
+        /// <summary>
+        /// Returns a List of dynamic objects that contain details of which migrations are available
+        /// </summary>
+        public static List<dynamic> AvailableMigrationsWithDetails
         {
-            foreach (string filePath in Directory.GetFiles(fullyQualifiedMigrationFilesPath)) { yield return filePath; }
+            get
+            {
+                DateTime? mostRecentMigration = rdbmsVendor.GetMostRecentMigration();
+
+                var Migrations =
+                    from m in MigrationsFilenames()
+                    where
+                        (
+                            MigrationDirection == MigrationDirectionEnum.Up && 
+                            (
+                                mostRecentMigration == null ||
+                                CommonAnonymousFunctions.TryGetDateFromFilename(Path.GetFileName(m)) > mostRecentMigration
+                            )
+                        ) 
+                        ||
+                            (MigrationDirection == MigrationDirectionEnum.Down &&
+                                CommonAnonymousFunctions.TryGetDateFromFilename(Path.GetFileName(m)) <= mostRecentMigration)
+                    select new
+                        {
+                            CreatedWhen = CommonAnonymousFunctions.TryGetDateFromFilename(Path.GetFileName(m)),
+                            Filename = Path.GetFileName(m)
+                        };
+
+                return Migrations.ToList<dynamic>();
+            }
+        }
+
+        static IEnumerable<string> MigrationsFilenames()
+        {
+            foreach (string filePath in 
+                MigrationDirection == MigrationDirectionEnum.Up 
+                    ? Directory.GetFiles(fullyQualifiedMigrationFilesPath)
+                    : Directory.GetFiles(fullyQualifiedMigrationFilesPath).Reverse()
+                    ) { yield return filePath; }
         }
 
         public static void Migrate()
@@ -64,14 +107,37 @@ namespace MigrationClasses
             try
             {
                 rdbmsVendor.BeginTransaction();
-                foreach (string sqlFilePath in Migrations()) { rdbmsVendor.RunCommandsInSQLFile(sqlFilePath); }
+                DateTime? mostRecentMigration = rdbmsVendor.GetMostRecentMigration();
+
+                foreach (string sqlFilePath in MigrationsFilenames())
+                {
+                    DateTime? fileDateTime = CommonAnonymousFunctions.TryGetDateFromFilename(Path.GetFileName(sqlFilePath));
+
+                    if (
+                        // Direction is UP and is a valid UP file for the target criteria chosen
+                        (MigrationDirection == MigrationDirectionEnum.Up && 
+                            (mostRecentMigration == null || fileDateTime > mostRecentMigration) &&
+                            (MigrateToDateTime == null || fileDateTime <= MigrateToDateTime)
+                        ) 
+                    
+                        ||
+
+                        // Direction is DOWN and is a valid DOWN file for the target criteria chosen
+                        (MigrationDirection == MigrationDirectionEnum.Down && 
+                            fileDateTime <= mostRecentMigration &&
+                            fileDateTime >= MigrateToDateTime 
+                        )
+                    )
+                        
+                        rdbmsVendor.RunCommandsInSQLFile(new StringBuilder(sqlFilePath), MigrationDirection);
+                }
                 rdbmsVendor.CommitTransaction();
             }
             catch (Exception e)
             {
                 rdbmsVendor.RollbackTransaction();
                 rdbmsVendor.CloseConnection();
-                throw e;        
+                throw e;
             }
         }
 

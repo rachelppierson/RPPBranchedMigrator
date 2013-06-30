@@ -12,6 +12,8 @@ using System.IO;
 using System.Reflection;
 using MigrationClasses.RDBMSVendorSupport;
 using MigrationClasses.RDBMSVendorSupport.VendorSpecificImplementations;
+using System.Dynamic;
+using System.Globalization;
 
 #endregion
 
@@ -22,6 +24,10 @@ namespace MigrationClasses
     public static class MigrationManager
     {
         #region Properties
+
+        public static bool ConnectionSucceeded { get { return rdbmsVendor.ConnectionSucceeded; } }
+
+        public static DateTime? MostRecentMigrationApplied { get { return rdbmsVendor.GetMostRecentMigration(); } }
 
         static ISupportedRDBMSVendor rdbmsVendor = new SQLServer(); //Default vendor is SQL Server
 
@@ -54,7 +60,41 @@ namespace MigrationClasses
 
         #region Migration Methods
 
-        static IEnumerable<string> Migrations()
+        public static IEnumerable<dynamic> MigrationFilesWithDetails
+        {
+            get
+            {
+                ////Created an Anonymous Function for determining the implied DateTime of a migration file's creation from its filename. 
+                ////
+                ////NB: 1) Can't do this inline because the LINQ expression below utilises an Anonymous Type, and you can't set an
+                ////       an Anonymous Type from an Anonymous Function - either the assignee or the expression needs to know the 
+                ////       return type in order for the other to be able to imply the type it should take.
+                ////
+                ////    2) Could put lots of other useful info in here if desired, such as the contents of the file retrieved via
+                ////       a FileStream, or a list of individual SQL instructions. However, as the aim is for this Property to be 
+                ////       used to populate UI elements smoothly, I've left retrieving that level of detail to consuming classes.
+
+                //Func<string, DateTime?> tryGetDateFromFilename =
+                //    value =>
+                //    {
+                //        DateTime createdWhen;
+                //        return DateTime.TryParseExact(
+                //            value, "yyyyMMdd_hhmmss", null, DateTimeStyles.None, out createdWhen) ? (DateTime?)createdWhen : null;
+                //    };
+
+                return
+                    from m in MigrationsFilenames()
+                    select new
+                        {
+                            CreatedWhen = CommonAnonymousFunctions.TryGetDateFromFilename(m),
+                            Filename = m
+                        };
+
+                //return (result is IEnumerable<dynamic>) ? result : null;
+            }
+        }
+
+        static IEnumerable<string> MigrationsFilenames()
         {
             foreach (string filePath in Directory.GetFiles(fullyQualifiedMigrationFilesPath)) { yield return filePath; }
         }
@@ -64,9 +104,9 @@ namespace MigrationClasses
             try
             {
                 rdbmsVendor.BeginTransaction();
-                foreach (string sqlFilePath in Migrations()) 
-                { 
-                    rdbmsVendor.RunCommandsInSQLFile(new StringBuilder(sqlFilePath), MigrationDirection); 
+                foreach (string sqlFilePath in MigrationsFilenames())
+                {
+                    rdbmsVendor.RunCommandsInSQLFile(new StringBuilder(sqlFilePath), MigrationDirection);
                 }
                 rdbmsVendor.CommitTransaction();
             }
@@ -74,7 +114,7 @@ namespace MigrationClasses
             {
                 rdbmsVendor.RollbackTransaction();
                 rdbmsVendor.CloseConnection();
-                throw e;        
+                throw e;
             }
         }
 

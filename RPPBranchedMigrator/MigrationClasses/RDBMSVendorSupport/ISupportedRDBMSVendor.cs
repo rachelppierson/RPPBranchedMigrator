@@ -27,7 +27,7 @@ namespace MigrationClasses.RDBMSVendorSupport
 
         /// <summary>Attempts to close any open Connection within the context of the RDBMS targeted and ConnectionString set</summary>
         void CloseConnection();
- 
+
         /// <summary>Attempts to run SQL commands contained in a .SQL file</summary>
         /// <param name="sqlFilePath">Fully-qualified path to a file containing valid SQL</param>
         void RunCommandsInSQLFile(StringBuilder sqlFilePath, MigrationDirectionEnum direction = MigrationDirectionEnum.Up);
@@ -46,7 +46,14 @@ namespace MigrationClasses.RDBMSVendorSupport
         /// </summary>
         DateTime? GetMostRecentMigration();
 
-        //Creates a record of a SQL files being migrated (Up or Down), along with the time the migration occurred.
+        /// <summary>
+        /// Creates a record of a SQL files being migrated (Up or Down), along with the time the migration occurred.
+        /// </summary>
+        /// <param name="filename">Filename of the SQL File that was successfully migrated</param>
+        /// <param name="direction">Direction in which migration was carried out (i.e., UP or DOWN)</param>
         void LogMigration(string filename, MigrationDirectionEnum direction);
+
+        /// <summary>Readonly Boolean Property indicating whether the current ConnectionString is valid</summary>
+        bool ConnectionSucceeded { get; }
     }
 }

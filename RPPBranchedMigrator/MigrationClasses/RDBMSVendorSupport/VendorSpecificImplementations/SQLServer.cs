@@ -30,7 +30,10 @@ namespace MigrationClasses.RDBMSVendorSupport.VendorSpecificImplementations
         public string ConnectionString
         {
             get { return connection.ConnectionString; }
-            set { connection = new SqlConnection(value); }
+            set {
+                try { connection = new SqlConnection(value); }
+                catch { connection = null; }            
+            }
         }
 
         public void BeginTransaction()
@@ -110,7 +113,29 @@ ON [PRIMARY];");
 
         public DateTime? GetMostRecentMigration()
         {
-            return null;
+            bool closeConnectionWhenComplete = false;
+            try
+            {
+                using (SqlCommand cmd = connection.CreateCommand())
+                {
+                    if (connection.State == ConnectionState.Closed)
+                    {
+                        connection.Open();
+                        closeConnectionWhenComplete = true;
+                    }
+                    cmd.Transaction = transaction;
+                    cmd.CommandText = @"SELECT MAX(MigrationFilename) MaxAppliedFilename FROM migrator.VersionInfo WHERE Direction = 'U'";
+                    return CommonAnonymousFunctions.TryGetDateFromFilename(cmd.ExecuteScalar().ToString());
+                }
+            }
+            catch
+            {
+                return null;
+            }
+            finally
+            {
+                if (closeConnectionWhenComplete) connection.Close();
+            }
         }
 
         public void LogMigration(string filename, MigrationDirectionEnum direction)
@@ -130,10 +155,35 @@ BEGIN
 END
 ",
                     filename.ToString(),
-                    DateTime.Now.ToString("dd MMM yyyy hh:mm:ss"),
+                    DateTime.Now.ToString("dd MMM yyyy HH:mm:ss"),
                     direction.ToString().ToUpper()[0]));
 
             runSQLcommand(recordMigrationSQL);
+        }
+
+        public bool ConnectionSucceeded 
+        {
+            get
+            {
+                bool closeConnectionWhenComplete = false;
+                try
+                {
+                    if (connection.State == ConnectionState.Closed)
+                    {
+                        connection.Open();
+                        closeConnectionWhenComplete = true;
+                    }
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+                finally
+                {
+                    if (closeConnectionWhenComplete) connection.Close();
+                }
+            }        
         }
 
         #endregion
@@ -213,7 +263,7 @@ END
                     //specific SqlException details via InnerException.
                     throw new Exception(
                         string.Format(
-                            "A SQL Exception occurred whilst trying to run the command '{0}'",
+                            "A SqlException occurred whilst trying to run the command '{0}'",
                         cmd.CommandText,
                         sqlFilePath == null ? "." : string.Format(" in the file '{0}'.", Path.GetFileName(sqlFilePath.ToString()))),
                         e.InnerException);
@@ -222,5 +272,44 @@ END
         }
 
         #endregion
+
+        //#region Private Classes
+        //
+        //private class CustomSQLCommands<T>
+        //{
+        //    ISupportedRDBMSVendor caller;
+        //
+        //    public CustomSQLCommands(ISupportedRDBMSVendor c)
+        //    {
+        //        caller = c;
+        //    }
+        //
+        //    T ExecuteScalar(StringBuilder sql, StringBuilder sqlFilePath = null)
+        //    {
+        //        using (SqlCommand cmd = connection.CreateCommand())
+        //        {
+        //            cmd.Transaction = transaction;
+        //
+        //            cmd.CommandText = sql.ToString();
+        //            try
+        //            {
+        //                cmd.ExecuteNonQuery();
+        //            }
+        //            catch (SqlException e)
+        //            {
+        //                //Let the consumer know exactly where the error occurred, and pass on any 
+        //                //specific SqlException details via InnerException.
+        //                throw new Exception(
+        //                    string.Format(
+        //                        "A SQL Exception occurred whilst trying to run the command '{0}'",
+        //                    cmd.CommandText,
+        //                    sqlFilePath == null ? "." : string.Format(" in the file '{0}'.", Path.GetFileName(sqlFilePath.ToString()))),
+        //                    e.InnerException);
+        //            }
+        //        }
+        //    }
+        //}
+        //
+        //#endregion
     }
 }

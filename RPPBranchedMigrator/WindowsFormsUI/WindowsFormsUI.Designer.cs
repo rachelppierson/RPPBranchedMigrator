@@ -43,22 +43,28 @@
             this.BtnTestConnection = new System.Windows.Forms.Button();
             this.LblConnectionTestSucceeded = new System.Windows.Forms.Label();
             this.LblConnectionTestFailed = new System.Windows.Forms.Label();
+            this.PnlMigDirection = new System.Windows.Forms.Panel();
+            this.RbnMigDirectionDown = new System.Windows.Forms.RadioButton();
+            this.RbnMigDirectionUp = new System.Windows.Forms.RadioButton();
+            this.LblMigDirection = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.SplMainUIArea)).BeginInit();
             this.SplMainUIArea.Panel1.SuspendLayout();
             this.SplMainUIArea.Panel2.SuspendLayout();
             this.SplMainUIArea.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.DGVAvailableMigrations)).BeginInit();
+            this.PnlMigDirection.SuspendLayout();
             this.SuspendLayout();
             // 
             // BtnTestCodeNow
             // 
             this.BtnTestCodeNow.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.BtnTestCodeNow.Location = new System.Drawing.Point(24, 432);
+            this.BtnTestCodeNow.Location = new System.Drawing.Point(379, 432);
             this.BtnTestCodeNow.Name = "BtnTestCodeNow";
             this.BtnTestCodeNow.Size = new System.Drawing.Size(75, 23);
             this.BtnTestCodeNow.TabIndex = 0;
             this.BtnTestCodeNow.Text = "Test Code Now";
             this.BtnTestCodeNow.UseVisualStyleBackColor = true;
+            this.BtnTestCodeNow.Visible = false;
             this.BtnTestCodeNow.Click += new System.EventHandler(this.BtnTestCodeNow_Click);
             // 
             // TxbConnectionString
@@ -120,6 +126,7 @@
             this.DGVAvailableMigrations.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.DGVAvailableMigrations.Enabled = false;
             this.DGVAvailableMigrations.Location = new System.Drawing.Point(2, 28);
+            this.DGVAvailableMigrations.MultiSelect = false;
             this.DGVAvailableMigrations.Name = "DGVAvailableMigrations";
             this.DGVAvailableMigrations.Size = new System.Drawing.Size(592, 154);
             this.DGVAvailableMigrations.TabIndex = 3;
@@ -149,12 +156,13 @@
             // 
             this.BtnRunMigrations.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.BtnRunMigrations.Enabled = false;
-            this.BtnRunMigrations.Location = new System.Drawing.Point(467, 432);
+            this.BtnRunMigrations.Location = new System.Drawing.Point(514, 432);
             this.BtnRunMigrations.Name = "BtnRunMigrations";
-            this.BtnRunMigrations.Size = new System.Drawing.Size(141, 23);
+            this.BtnRunMigrations.Size = new System.Drawing.Size(94, 23);
             this.BtnRunMigrations.TabIndex = 6;
             this.BtnRunMigrations.Text = "Run Migrations";
             this.BtnRunMigrations.UseVisualStyleBackColor = true;
+            this.BtnRunMigrations.Click += new System.EventHandler(this.BtnRunMigrations_Click);
             // 
             // LblMigFilesFolder
             // 
@@ -169,23 +177,26 @@
             // 
             this.TxbMigFilesFolder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.TxbMigFilesFolder.Location = new System.Drawing.Point(124, 94);
+            this.TxbMigFilesFolder.Location = new System.Drawing.Point(119, 94);
             this.TxbMigFilesFolder.Name = "TxbMigFilesFolder";
-            this.TxbMigFilesFolder.Size = new System.Drawing.Size(459, 20);
+            this.TxbMigFilesFolder.Size = new System.Drawing.Size(460, 20);
             this.TxbMigFilesFolder.TabIndex = 8;
+            this.TxbMigFilesFolder.TextChanged += new System.EventHandler(this.TxbMigFilesFolder_TextChanged);
             // 
             // BtnMigFilesFolderEllipsis
             // 
             this.BtnMigFilesFolderEllipsis.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.BtnMigFilesFolderEllipsis.Location = new System.Drawing.Point(585, 92);
+            this.BtnMigFilesFolderEllipsis.Location = new System.Drawing.Point(580, 92);
             this.BtnMigFilesFolderEllipsis.Name = "BtnMigFilesFolderEllipsis";
             this.BtnMigFilesFolderEllipsis.Size = new System.Drawing.Size(25, 23);
             this.BtnMigFilesFolderEllipsis.TabIndex = 9;
             this.BtnMigFilesFolderEllipsis.Text = "...";
             this.BtnMigFilesFolderEllipsis.UseVisualStyleBackColor = true;
+            this.BtnMigFilesFolderEllipsis.Click += new System.EventHandler(this.BtnMigFilesFolderEllipsis_Click);
             // 
             // BtnTestConnection
             // 
+            this.BtnTestConnection.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.BtnTestConnection.Location = new System.Drawing.Point(533, 33);
             this.BtnTestConnection.Name = "BtnTestConnection";
             this.BtnTestConnection.Size = new System.Drawing.Size(75, 35);
@@ -218,11 +229,57 @@
             this.LblConnectionTestFailed.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.LblConnectionTestFailed.Visible = false;
             // 
+            // PnlMigDirection
+            // 
+            this.PnlMigDirection.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.PnlMigDirection.Controls.Add(this.RbnMigDirectionDown);
+            this.PnlMigDirection.Controls.Add(this.RbnMigDirectionUp);
+            this.PnlMigDirection.Controls.Add(this.LblMigDirection);
+            this.PnlMigDirection.Location = new System.Drawing.Point(9, 429);
+            this.PnlMigDirection.Name = "PnlMigDirection";
+            this.PnlMigDirection.Size = new System.Drawing.Size(230, 28);
+            this.PnlMigDirection.TabIndex = 16;
+            // 
+            // RbnMigDirectionDown
+            // 
+            this.RbnMigDirectionDown.AutoSize = true;
+            this.RbnMigDirectionDown.Location = new System.Drawing.Point(159, 6);
+            this.RbnMigDirectionDown.Name = "RbnMigDirectionDown";
+            this.RbnMigDirectionDown.Size = new System.Drawing.Size(60, 17);
+            this.RbnMigDirectionDown.TabIndex = 18;
+            this.RbnMigDirectionDown.TabStop = true;
+            this.RbnMigDirectionDown.Text = "DOWN";
+            this.RbnMigDirectionDown.UseVisualStyleBackColor = true;
+            this.RbnMigDirectionDown.CheckedChanged += new System.EventHandler(this.RbnMigDirectionDown_CheckedChanged);
+            // 
+            // RbnMigDirectionUp
+            // 
+            this.RbnMigDirectionUp.AutoSize = true;
+            this.RbnMigDirectionUp.Checked = true;
+            this.RbnMigDirectionUp.Location = new System.Drawing.Point(114, 6);
+            this.RbnMigDirectionUp.Name = "RbnMigDirectionUp";
+            this.RbnMigDirectionUp.Size = new System.Drawing.Size(40, 17);
+            this.RbnMigDirectionUp.TabIndex = 17;
+            this.RbnMigDirectionUp.TabStop = true;
+            this.RbnMigDirectionUp.Text = "UP";
+            this.RbnMigDirectionUp.UseVisualStyleBackColor = true;
+            this.RbnMigDirectionUp.CheckedChanged += new System.EventHandler(this.RbnMigDirectionUp_CheckedChanged);
+            // 
+            // LblMigDirection
+            // 
+            this.LblMigDirection.AutoSize = true;
+            this.LblMigDirection.Location = new System.Drawing.Point(6, 8);
+            this.LblMigDirection.Name = "LblMigDirection";
+            this.LblMigDirection.Size = new System.Drawing.Size(98, 13);
+            this.LblMigDirection.TabIndex = 16;
+            this.LblMigDirection.Text = "Migration Direction:";
+            // 
             // WindowsFormsUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(620, 462);
+            this.Controls.Add(this.PnlMigDirection);
             this.Controls.Add(this.LblConnectionTestFailed);
             this.Controls.Add(this.LblConnectionTestSucceeded);
             this.Controls.Add(this.BtnTestConnection);
@@ -243,6 +300,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.SplMainUIArea)).EndInit();
             this.SplMainUIArea.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.DGVAvailableMigrations)).EndInit();
+            this.PnlMigDirection.ResumeLayout(false);
+            this.PnlMigDirection.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -265,6 +324,10 @@
         private System.Windows.Forms.Button BtnTestConnection;
         private System.Windows.Forms.Label LblConnectionTestSucceeded;
         private System.Windows.Forms.Label LblConnectionTestFailed;
+        private System.Windows.Forms.Panel PnlMigDirection;
+        private System.Windows.Forms.RadioButton RbnMigDirectionDown;
+        private System.Windows.Forms.RadioButton RbnMigDirectionUp;
+        private System.Windows.Forms.Label LblMigDirection;
     }
 }
 

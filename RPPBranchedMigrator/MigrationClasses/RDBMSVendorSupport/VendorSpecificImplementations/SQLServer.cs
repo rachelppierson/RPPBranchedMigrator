@@ -30,9 +30,10 @@ namespace MigrationClasses.RDBMSVendorSupport.VendorSpecificImplementations
         public string ConnectionString
         {
             get { return connection.ConnectionString; }
-            set {
+            set
+            {
                 try { connection = new SqlConnection(value); }
-                catch { connection = null; }            
+                catch { connection = null; }
             }
         }
 
@@ -45,7 +46,11 @@ namespace MigrationClasses.RDBMSVendorSupport.VendorSpecificImplementations
 
         public void CommitTransaction()
         {
-            if (transaction is SqlTransaction) transaction.Commit();
+            if (transaction is SqlTransaction)
+            {
+                transaction.Commit();
+                transaction = null;
+            }
         }
 
         public void RollbackTransaction()
@@ -161,7 +166,7 @@ END
             runSQLcommand(recordMigrationSQL);
         }
 
-        public bool ConnectionSucceeded 
+        public bool ConnectionSucceeded
         {
             get
             {
@@ -183,7 +188,7 @@ END
                 {
                     if (closeConnectionWhenComplete) connection.Close();
                 }
-            }        
+            }
         }
 
         #endregion

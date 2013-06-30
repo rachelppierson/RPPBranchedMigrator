@@ -23,6 +23,12 @@ namespace MigrationClasses
 
     public static class MigrationManager
     {
+        #region Fields
+
+        public static DateTime? MigrateToDateTime = DateTime.Now;
+
+        #endregion
+
         #region Properties
 
         public static bool ConnectionSucceeded { get { return rdbmsVendor.ConnectionSucceeded; } }
@@ -49,54 +55,51 @@ namespace MigrationClasses
             get { return Path.Combine(MigrationsFolderPath, MigrationDirection.ToString().ToUpper()); }
         }
 
-        public static DateTime? MigrateToDateTime { get; set; }
-
-        public static MigrationDirectionEnum MigrationDirection
-        {
-            get { return MigrationDirectionEnum.Up; } //TODO: Make this able to be detected from the context
-        }
+        public static MigrationDirectionEnum MigrationDirection { get; set; }
 
         #endregion
 
         #region Migration Methods
 
-        public static IEnumerable<dynamic> MigrationFilesWithDetails
+        /// <summary>
+        /// Returns a List of dynamic objects that contain details of which migrations are available
+        /// </summary>
+        public static List<dynamic> AvailableMigrationsWithDetails
         {
             get
             {
-                ////Created an Anonymous Function for determining the implied DateTime of a migration file's creation from its filename. 
-                ////
-                ////NB: 1) Can't do this inline because the LINQ expression below utilises an Anonymous Type, and you can't set an
-                ////       an Anonymous Type from an Anonymous Function - either the assignee or the expression needs to know the 
-                ////       return type in order for the other to be able to imply the type it should take.
-                ////
-                ////    2) Could put lots of other useful info in here if desired, such as the contents of the file retrieved via
-                ////       a FileStream, or a list of individual SQL instructions. However, as the aim is for this Property to be 
-                ////       used to populate UI elements smoothly, I've left retrieving that level of detail to consuming classes.
+                DateTime? mostRecentMigration = rdbmsVendor.GetMostRecentMigration();
 
-                //Func<string, DateTime?> tryGetDateFromFilename =
-                //    value =>
-                //    {
-                //        DateTime createdWhen;
-                //        return DateTime.TryParseExact(
-                //            value, "yyyyMMdd_hhmmss", null, DateTimeStyles.None, out createdWhen) ? (DateTime?)createdWhen : null;
-                //    };
-
-                return
+                var Migrations =
                     from m in MigrationsFilenames()
+                    where
+                        (
+                            MigrationDirection == MigrationDirectionEnum.Up && 
+                            (
+                                mostRecentMigration == null ||
+                                CommonAnonymousFunctions.TryGetDateFromFilename(Path.GetFileName(m)) > mostRecentMigration
+                            )
+                        ) 
+                        ||
+                            (MigrationDirection == MigrationDirectionEnum.Down &&
+                                CommonAnonymousFunctions.TryGetDateFromFilename(Path.GetFileName(m)) <= mostRecentMigration)
                     select new
                         {
-                            CreatedWhen = CommonAnonymousFunctions.TryGetDateFromFilename(m),
-                            Filename = m
+                            CreatedWhen = CommonAnonymousFunctions.TryGetDateFromFilename(Path.GetFileName(m)),
+                            Filename = Path.GetFileName(m)
                         };
 
-                //return (result is IEnumerable<dynamic>) ? result : null;
+                return Migrations.ToList<dynamic>();
             }
         }
 
         static IEnumerable<string> MigrationsFilenames()
         {
-            foreach (string filePath in Directory.GetFiles(fullyQualifiedMigrationFilesPath)) { yield return filePath; }
+            foreach (string filePath in 
+                MigrationDirection == MigrationDirectionEnum.Up 
+                    ? Directory.GetFiles(fullyQualifiedMigrationFilesPath)
+                    : Directory.GetFiles(fullyQualifiedMigrationFilesPath).Reverse()
+                    ) { yield return filePath; }
         }
 
         public static void Migrate()
@@ -104,9 +107,29 @@ namespace MigrationClasses
             try
             {
                 rdbmsVendor.BeginTransaction();
+                DateTime? mostRecentMigration = rdbmsVendor.GetMostRecentMigration();
+
                 foreach (string sqlFilePath in MigrationsFilenames())
                 {
-                    rdbmsVendor.RunCommandsInSQLFile(new StringBuilder(sqlFilePath), MigrationDirection);
+                    DateTime? fileDateTime = CommonAnonymousFunctions.TryGetDateFromFilename(Path.GetFileName(sqlFilePath));
+
+                    if (
+                        // Direction is UP and is a valid UP file for the target criteria chosen
+                        (MigrationDirection == MigrationDirectionEnum.Up && 
+                            (mostRecentMigration == null || fileDateTime > mostRecentMigration) &&
+                            (MigrateToDateTime == null || fileDateTime <= MigrateToDateTime)
+                        ) 
+                    
+                        ||
+
+                        // Direction is DOWN and is a valid DOWN file for the target criteria chosen
+                        (MigrationDirection == MigrationDirectionEnum.Down && 
+                            fileDateTime <= mostRecentMigration &&
+                            fileDateTime >= MigrateToDateTime 
+                        )
+                    )
+                        
+                        rdbmsVendor.RunCommandsInSQLFile(new StringBuilder(sqlFilePath), MigrationDirection);
                 }
                 rdbmsVendor.CommitTransaction();
             }

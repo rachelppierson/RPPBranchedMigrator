@@ -2,4 +2,3 @@ C:\Projects\RPPBranchedMigrator\RPPBranchedMigrator\MigrationClasses\bin\Debug\M
 C:\Projects\RPPBranchedMigrator\RPPBranchedMigrator\MigrationClasses\bin\Debug\MigrationClasses.pdb
 C:\Projects\RPPBranchedMigrator\RPPBranchedMigrator\MigrationClasses\obj\Debug\MigrationClasses.dll
 C:\Projects\RPPBranchedMigrator\RPPBranchedMigrator\MigrationClasses\obj\Debug\MigrationClasses.pdb
-C:\Projects\RPPBranchedMigrator\RPPBranchedMigrator\MigrationClasses\obj\Debug\MigrationClasses.csprojResolveAssemblyReference.cache

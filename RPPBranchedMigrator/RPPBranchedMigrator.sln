@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MigrationClasses", "MigrationClasses\MigrationClasses.csproj", "{32FDE186-5463-418F-9A1F-8D4DA3B2AB18}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsFormsUI", "WindowsFormsUI\WindowsFormsUI.csproj", "{8A84280C-0DAB-4183-B373-81EB2DCC156F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BAB56BFA-62C0-464B-841C-9E8B2DBDAFFC} = {BAB56BFA-62C0-464B-841C-9E8B2DBDAFFC}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Notes", "Notes", "{641D49F1-57DC-4311-9F0D-C430982E4F22}"
 	ProjectSection(SolutionItems) = preProject

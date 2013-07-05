@@ -14,7 +14,9 @@ namespace BranchedMigrator
 
         static void Main(string[] args)
         {
-            ArgsType argsType = args[0].Length > 0 && args[0].Contains('|') ? ArgsType.Named : ArgsType.Missing;
+            //Debugger.Break();
+
+            ArgsType argsType = args.Length > 0 && args[0].Contains('$') ? ArgsType.Named : ArgsType.Missing;
 
             Dictionary<Args, string> argsDict = new Dictionary<Args, string>();
 
@@ -26,7 +28,7 @@ namespace BranchedMigrator
                         throw new Exception("Invalid arguments supplied");
 
                     case ArgsType.Named:
-                        string[] split = arg.Value.Split('|');
+                        string[] split = arg.Value.Split('$');
                         if (split.Count() != 2) throw new Exception("Invalid arguments supplied");
                         argsDict.Add(
                             (Args)Enum.Parse(typeof(Args), split[0].ToString().ToLower(), true),

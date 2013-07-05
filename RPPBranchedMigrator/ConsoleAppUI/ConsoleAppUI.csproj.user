@@ -4,7 +4,6 @@
     <ProjectView>ProjectFiles</ProjectView>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <StartArguments>
-    </StartArguments>
+    <StartArguments>ConnectionString|"Server=RACHEL-ROSES\RPP_ROSES_SQL2k8;Database=MigTest;User Id=sa;Password=Password1;" MigrationFilesFolder|"C:\Projects\RPPBranchedMigrator\MigrationSourceFiles_SimpleCompanySchema" MigrateToDate|"01 Jun 2013 11:15:30"</StartArguments>
   </PropertyGroup>
 </Project>

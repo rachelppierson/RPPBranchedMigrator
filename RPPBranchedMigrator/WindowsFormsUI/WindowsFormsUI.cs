@@ -26,7 +26,7 @@ namespace WindowsFormsUI
             BtnRunMigrations.Enabled = true;
 
             TxbCommandLineEquivalent.Text =                
-                string.Format("{3} ConnectionString|\"{0}\" MigrationFilesFolder|\"{1}\" MigrateToDate|\"{2}\"",
+                string.Format("\"{3}\" ConnectionString$\"{0}\" MigrationFilesFolder$\"{1}\" MigrateToDate$\"{2}\"",
                 TxbConnectionString.Text, //NB: If you use MigrationManager.ConnectionString it strips out the password 
                 MigrationManager.MigrationsFolderPath,
                 MigrationManager.MigrateToDateTime.Value.ToString("dd MMM yyyy HH:mm:ss"),

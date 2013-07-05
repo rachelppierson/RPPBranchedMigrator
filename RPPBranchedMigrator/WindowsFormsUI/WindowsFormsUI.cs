@@ -24,12 +24,25 @@ namespace WindowsFormsUI
         {
             MigrationManager.MigrateToDateTime = Convert.ToDateTime(DGVAvailableMigrations.Rows[e.RowIndex].Cells[0].Value);
             BtnRunMigrations.Enabled = true;
+
+            TxbCommandLineEquivalent.Text =                
+                string.Format("\"{3}\" ConnectionString$\"{0}\" MigrationFilesFolder$\"{1}\" MigrateToDate$\"{2}\"",
+                TxbConnectionString.Text, //NB: If you use MigrationManager.ConnectionString it strips out the password 
+                MigrationManager.MigrationsFolderPath,
+                MigrationManager.MigrateToDateTime.Value.ToString("dd MMM yyyy HH:mm:ss"),
+                BranchedMigratorConsoleAppPath());
+        }
+
+        string BranchedMigratorConsoleAppPath()
+        {
+            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BranchedMigrator.exe")
+                .ReplaceLastSubstring("WindowsFormsUI", "ConsoleAppUI");
         }
 
         private void BtnTestCodeNow_Click(object sender, EventArgs e)
         {
-            TxbConnectionString.Text = @"Server=RACHEL-ROSES\RPP_ROSES_SQL2k8;Database=MigTest002;User Id=sa;Password=Password1;";
-            TxbMigFilesFolder.Text = @"C:\Projects\RPPBranchedMigrator\MigrationSourceFiles";
+            TxbConnectionString.Text = @"Server=RACHEL-ROSES\RPP_ROSES_SQL2k8;Database=MigTest;User Id=sa;Password=Password1;";
+            TxbMigFilesFolder.Text = @"C:\Projects\RPPBranchedMigrator\MigrationSourceFiles_SimpleCompanySchema";
         }
 
         private void BtnTestConnection_Click(object sender, EventArgs e)
@@ -60,6 +73,7 @@ namespace WindowsFormsUI
                 DGVAvailableMigrations.Enabled = false;
             }
             BtnRunMigrations.Enabled = false;
+            TxbCommandLineEquivalent.Text = string.Empty;
         }
 
         private void TxbConnectionString_TextChanged(object sender, EventArgs e)
@@ -118,5 +132,15 @@ namespace WindowsFormsUI
             MigrationManager.Migrate();
             SetMigrationListIfPossible();
         }
+    }
+
+    public static class Extensions
+    {
+        public static string ReplaceLastSubstring (this string sourceString, string searchString, string replaceString)
+        {
+            StringBuilder vRet = new StringBuilder(sourceString);
+            vRet.Replace(searchString, replaceString, vRet.ToString().LastIndexOf(searchString), searchString.Length);
+            return vRet.ToString();
+        }    
     }
 }

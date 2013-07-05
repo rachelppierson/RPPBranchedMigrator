@@ -41,8 +41,8 @@ namespace WindowsFormsUI
 
         private void BtnTestCodeNow_Click(object sender, EventArgs e)
         {
-            TxbConnectionString.Text = @"Server=RACHEL-ROSES\RPP_ROSES_SQL2k8;Database=MigTest002;User Id=sa;Password=Password1;";
-            TxbMigFilesFolder.Text = @"C:\Projects\RPPBranchedMigrator\MigrationSourceFiles";
+            TxbConnectionString.Text = @"Server=RACHEL-ROSES\RPP_ROSES_SQL2k8;Database=MigTest;User Id=sa;Password=Password1;";
+            TxbMigFilesFolder.Text = @"C:\Projects\RPPBranchedMigrator\MigrationSourceFiles_SimpleCompanySchema";
         }
 
         private void BtnTestConnection_Click(object sender, EventArgs e)

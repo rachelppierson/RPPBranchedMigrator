@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectView>ProjectFiles</ProjectView>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <StartArguments>ConnectionString$"Server=RACHEL-ROSES\RPP_ROSES_SQL2k8;Database=MigTest;User Id=sa;Password=Password1;" MigrationFilesFolder$"C:\Projects\RPPBranchedMigrator\MigrationSourceFiles_SimpleCompanySchema" MigrateToDate$"10 Jan 2013 08:55:32"</StartArguments>
+  </PropertyGroup>
+</Project>

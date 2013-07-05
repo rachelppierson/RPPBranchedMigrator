@@ -141,6 +141,30 @@ namespace MigrationClasses
             }
         }
 
+        /// <summary>
+        /// Attempts to set the Migration Direction based on the DateTime of the desired migration
+        /// compared with the DateTime of the most recently applied migration
+        /// </summary>
+        /// <returns>A boolean value indicating whether the migration direction could be set</returns>
+        public static bool AutoSetMigrationDirection()
+        { 
+            DateTime? mostRecentMigration = rdbmsVendor.GetMostRecentMigration();
+            if (MigrateToDateTime.HasValue && rdbmsVendor.GetMostRecentMigration().HasValue)
+            {
+                MigrationDirection =
+                    (MigrateToDateTime.Value > mostRecentMigration.Value)
+                    ? MigrationDirectionEnum.Up
+                    : MigrationDirectionEnum.Down;
+                return true;
+            }
+            else if (MigrateToDateTime.HasValue)
+            {
+                MigrationDirection = MigrationDirectionEnum.Up;
+                return true;
+            }
+            return false;
+        }
+
         #endregion
     }
 }

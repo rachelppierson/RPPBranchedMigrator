@@ -146,7 +146,6 @@
             this.TxbCommandLineEquivalent.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.TxbCommandLineEquivalent.Enabled = false;
             this.TxbCommandLineEquivalent.Location = new System.Drawing.Point(0, 24);
             this.TxbCommandLineEquivalent.Multiline = true;
             this.TxbCommandLineEquivalent.Name = "TxbCommandLineEquivalent";

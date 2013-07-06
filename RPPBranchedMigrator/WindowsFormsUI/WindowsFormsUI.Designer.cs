@@ -64,6 +64,7 @@
             this.BtnTestCodeNow.TabIndex = 0;
             this.BtnTestCodeNow.Text = "Test Code Now";
             this.BtnTestCodeNow.UseVisualStyleBackColor = true;
+            this.BtnTestCodeNow.Visible = false;
             this.BtnTestCodeNow.Click += new System.EventHandler(this.BtnTestCodeNow_Click);
             // 
             // TxbConnectionString

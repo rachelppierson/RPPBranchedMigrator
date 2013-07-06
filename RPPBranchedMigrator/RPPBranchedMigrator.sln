@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Notes", "Notes", "{641D49F1
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleAppUI", "ConsoleAppUI\ConsoleAppUI.csproj", "{BAB56BFA-62C0-464B-841C-9E8B2DBDAFFC}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UIs", "UIs", "{6DD4C402-5597-4C77-95D0-F4E41AF0BE39}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,5 +60,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BAB56BFA-62C0-464B-841C-9E8B2DBDAFFC} = {6DD4C402-5597-4C77-95D0-F4E41AF0BE39}
+		{8A84280C-0DAB-4183-B373-81EB2DCC156F} = {6DD4C402-5597-4C77-95D0-F4E41AF0BE39}
 	EndGlobalSection
 EndGlobal

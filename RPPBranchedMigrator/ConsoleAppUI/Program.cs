@@ -97,5 +97,10 @@ namespace BranchedMigrator
 
             MigrationManager.Migrate();
         }
+
+        void MigrationOutcome(bool succeeded, Exception ex, StringBuilder outcomeDescription)
+        { 
+            Console.WriteLine(outcomeDescription);
+        }
     }
 }

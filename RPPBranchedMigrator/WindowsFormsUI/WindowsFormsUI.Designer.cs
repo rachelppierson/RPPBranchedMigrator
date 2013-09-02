@@ -57,20 +57,19 @@
             // 
             // BtnTestCodeNow
             // 
-            this.BtnTestCodeNow.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.BtnTestCodeNow.Location = new System.Drawing.Point(379, 432);
+            this.BtnTestCodeNow.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.BtnTestCodeNow.Location = new System.Drawing.Point(433, 432);
             this.BtnTestCodeNow.Name = "BtnTestCodeNow";
             this.BtnTestCodeNow.Size = new System.Drawing.Size(75, 23);
             this.BtnTestCodeNow.TabIndex = 0;
             this.BtnTestCodeNow.Text = "Test Code Now";
             this.BtnTestCodeNow.UseVisualStyleBackColor = true;
-            this.BtnTestCodeNow.Visible = false;
             this.BtnTestCodeNow.Click += new System.EventHandler(this.BtnTestCodeNow_Click);
             // 
             // TxbConnectionString
             // 
-            this.TxbConnectionString.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.TxbConnectionString.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.TxbConnectionString.Location = new System.Drawing.Point(12, 33);
             this.TxbConnectionString.Multiline = true;
             this.TxbConnectionString.Name = "TxbConnectionString";
@@ -89,9 +88,9 @@
             // 
             // SplMainUIArea
             // 
-            this.SplMainUIArea.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.SplMainUIArea.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.SplMainUIArea.Location = new System.Drawing.Point(12, 118);
             this.SplMainUIArea.Name = "SplMainUIArea";
             this.SplMainUIArea.Orientation = System.Windows.Forms.Orientation.Horizontal;
@@ -120,9 +119,9 @@
             // 
             // DGVAvailableMigrations
             // 
-            this.DGVAvailableMigrations.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.DGVAvailableMigrations.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.DGVAvailableMigrations.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
             this.DGVAvailableMigrations.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.DGVAvailableMigrations.Enabled = false;
@@ -143,9 +142,9 @@
             // 
             // TxbCommandLineEquivalent
             // 
-            this.TxbCommandLineEquivalent.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.TxbCommandLineEquivalent.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.TxbCommandLineEquivalent.Location = new System.Drawing.Point(0, 24);
             this.TxbCommandLineEquivalent.Multiline = true;
             this.TxbCommandLineEquivalent.Name = "TxbCommandLineEquivalent";
@@ -175,8 +174,8 @@
             // 
             // TxbMigFilesFolder
             // 
-            this.TxbMigFilesFolder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.TxbMigFilesFolder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.TxbMigFilesFolder.Location = new System.Drawing.Point(119, 94);
             this.TxbMigFilesFolder.Name = "TxbMigFilesFolder";
             this.TxbMigFilesFolder.Size = new System.Drawing.Size(460, 20);
